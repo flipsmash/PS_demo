@@ -22,24 +22,24 @@ df_main['copy_paste_bool'] = np.where(df_main['copy_paste_ct']>0, 1, 0)
 
 # Identify columns that include string 'time' and convert to hours for easier reading, analysis
 time_columns = df_main.filter(like='time').columns
-df_main[time_columns] = df_main[time_columns] / 3600
+df_main[time_columns] = df_main[time_columns] / 3600  # duration easier in hours
 
 # Maybe time of data is credible even if date isn't?
 df_main['attempt_time_of_day'] = df_main['attempt_start_dt'].dt.time
 
-
+# Divide data into 3 frames: all data, one for test-level, one for quest-level
 pattern = re.compile(r'^q\d+')
 test_columns = [col for col in df_main.columns if not pattern.match(col)]
 quest_columns  = [col for col in df_main.columns if pattern.match(col)]
 
-# Save data to files, one for all data, one for test-level, one for quest-level
 df_main.to_csv('clean_main_data.csv')
 df_test = df_main[test_columns]
 df_test.to_csv('clean_test_only_data.csv')
-df_quest = df_main[quest_columns].copy()
+
+# Removing Q1 from further analysis
+df_quest = df_main[quest_columns].iloc[:,1:].copy()
 df_quest['id'] = df_main['cand_id']
 df_quest.to_csv('clean_quest_only_data.csv')
-
 
 
 ## Making long forms of all q data and then assembling for a transposed 
@@ -71,13 +71,16 @@ df_times_melted['question'] = df_times_melted['question'].str.replace('-time', '
 df_locs_melted['question'] = df_locs_melted['question'].str.replace('-loc', '')
 df_compiles_melted['question'] = df_compiles_melted['question'].str.replace('-compile&test_ct', '')
 
-# Need to debug here - lost Q14 on the way.  Something weird - outer join issue?
 
 df_long1 = pd.merge(df_scores_melted, df_times_melted, on=['id', 'question'])
 df_long2 = pd.merge(df_locs_melted, df_compiles_melted, on=['id', 'question'])
 df_long = pd.merge(df_long1, df_long2, on=['id', 'question'])
-
+df_long_w_tags = pd.merge(df_long, df_tags, left_on = "question", right_on = "Qnum", how = "inner")
 df_long.to_csv('clean_quest_long_data.csv')
+df_long_w_tags.to_csv('clean_quest_w_tags_long_data.csv')
+
+
+
 
 #########################
 ## Copy Paste Analysis ##
