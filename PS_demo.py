@@ -116,51 +116,24 @@ x2 = sm.add_constant(x2)
 
 # Fit the model
 model = sm.OLS(y, x2).fit()
+print(model.summary())
 
 # #####################
 # ## Item Analysis - See R beyond basics   ##
 # #####################
 
-# ## Difficulty ##
-# df_scores.drop('id', axis=1, inplace=True)
-# agg = df_scores.agg('sum')/df_scores.agg('count')
-# agg[1:14] = agg[1:14]/10
-
-# ## Add Overall Mean
-# #agg.drop('id', inplace=True)
-# agg['total-score'] = agg.values.mean()
-# df_agg = agg.round(4).to_frame(name="Mean")
-# df_agg['rank'] = agg.rank()
-
-# ## Discrimination ##
-# ## subtracting the item under investigation from the total score for each item:
-# df_totals = df_main.loc[:, 'score'].to_frame()
-# df_adj_correl_tota1s = abs(df_scores.sub(df_totals['score'], axis=0))
-
-# corrected_item_total_correlations = df_scores.corrwith(df_adj_correl_tota1s, method = 'kendall')
-
-# ## To Do - Deal with NaNs in Q1, which may be lowering results
+df_scores.drop('id',axis=1, inplace = True)
+agg = df_scores.agg('sum')/(df_scores.agg('count')*10)
+agg['total-score'] = agg.values.mean()
+df_agg = agg.to_frame(name="mean").round(3)
+df_agg['rank'] = agg.rank()
 
 
+print(df_agg)
 
-# # ## Tags ##
-# # df_tags = pd.read_excel('original_data/data.xlsx', sheet_name = 1)
-# # df_agg.index = df_agg.index.str.split('-').str[0]
-# # df_agg = df_agg["Mean"]
-# # df_agg.drop('total', inplace=True)
+item_to_total_correlations = df_scores.corrwith(df_main['score'], method = 'spearman')
+print(item_to_total_correlations)
 
-# # ## Join questions to tags ##
-# # df_tags.set_index('Qnum', inplace = True)
-# # df_tags.index.equals(agg.index)
-# # df_tags["question"] = df_agg
-# # grouped_data = df_tags.groupby(['Tag'])
-
-# # ## Create score data aggregated by tag
-# # ## To Do:  Add correl to this aggregation
-# # agg_data = grouped_data['question'].agg(['mean', 'count'])
-
-
-
-
-
-
+df_adj_correl_totals = abs(df_scores.sub(df_main['score'], axis=0))
+adj_item_to_total_correlations = df_scores.corrwith(df_adj_correl_totals, method = 'spearman')
+print(adj_item_to_total_correlations)
